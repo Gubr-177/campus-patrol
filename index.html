@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安全校园巡逻系统</title>
+<style>
+  :root{
+    --blue:#1a5fb4;
+    --blue-dark:#124a8f;
+    --blue-soft:#e8f0fb;
+    --yellow:#f5b301;
+    --yellow-soft:#fff6da;
+    --ink:#22303f;
+    --muted:#6b7a8d;
+    --line:#e2e8f0;
+    --bg:#ffffff;
+    --bg-soft:#f6f8fb;
+    --ok:#1f8a4c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+    background:var(--bg-soft);color:var(--ink);font-size:14px;
+  }
+  header.top{
+    background:var(--bg);border-bottom:2px solid var(--blue);
+    display:flex;align-items:center;gap:14px;padding:12px 26px;
+    position:sticky;top:0;z-index:20;
+  }
+  .logo{
+    width:34px;height:34px;border-radius:9px;background:var(--blue);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;
+    position:relative;
+  }
+  .logo::after{content:"";position:absolute;right:-3px;bottom:-3px;width:12px;height:12px;border-radius:50%;background:var(--yellow);border:2px solid #fff;}
+  .brand h1{font-size:17px;margin:0;letter-spacing:.5px;}
+  .brand p{margin:2px 0 0;font-size:11px;color:var(--muted);}
+  .spacer{flex:1;}
+  .clock{font-size:12px;color:var(--muted);}
+  .badge{background:var(--yellow-soft);border:1px solid var(--yellow);color:#8a6400;font-size:11px;padding:3px 9px;border-radius:20px;}
+
+  nav.tabs{
+    display:flex;gap:6px;padding:0 26px;background:var(--bg);border-bottom:1px solid var(--line);
+    position:sticky;top:60px;z-index:19;flex-wrap:wrap;
+  }
+  nav.tabs button{
+    border:none;background:transparent;padding:12px 16px;font-size:14px;color:var(--muted);
+    cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;
+  }
+  nav.tabs button:hover{color:var(--blue);}
+  nav.tabs button.active{color:var(--blue);border-bottom-color:var(--yellow);font-weight:700;}
+
+  main{padding:22px 26px 60px;max-width:1180px;margin:0 auto;}
+  .page{display:none;}
+  .page.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;}}
+
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,50,90,.04);}
+  .card h2{font-size:15px;margin:0 0 4px;color:var(--blue-dark);}
+  .card .hint{font-size:12px;color:var(--muted);margin:0 0 14px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .col{flex:1;min-width:260px;}
+
+  button.btn{
+    font-family:inherit;font-size:13px;border-radius:8px;padding:9px 16px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--ink);transition:.15s;
+  }
+  button.btn:hover{border-color:var(--blue);color:var(--blue);}
+  button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;}
+  button.primary:hover{background:var(--blue-dark);color:#fff;}
+  button.warn{background:var(--yellow);border-color:var(--yellow);color:#5b4300;font-weight:600;}
+  button.warn:hover{filter:brightness(.96);color:#5b4300;}
+  button.ghost{background:var(--blue-soft);border-color:transparent;color:var(--blue);}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+  button.mini{padding:5px 11px;font-size:12px;}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+  .toolbar .label{font-size:12px;color:var(--muted);margin-right:2px;}
+
+  canvas.grid{cursor:crosshair;border-radius:10px;border:1px solid var(--line);background:#fff;display:block;}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:10px;flex-wrap:wrap;}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+
+  .stat{display:flex;gap:22px;flex-wrap:wrap;margin-top:12px;}
+  .stat div{background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:130px;}
+  .stat span{display:block;font-size:11px;color:var(--muted);}
+  .stat b{font-size:18px;color:var(--blue-dark);}
+  .stat b.y{color:#8a6400;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{color:var(--muted);font-weight:600;background:var(--bg-soft);font-size:12px;}
+  tr:hover td{background:#fbfcfe;}
+
+  .list-item{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;}
+  .list-item .grow{flex:1;}
+  .list-item .name{font-weight:700;}
+  .list-item .meta{font-size:12px;color:var(--muted);margin-top:3px;}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--blue-soft);color:var(--blue);margin-right:6px;}
+  .tag.y{background:var(--yellow-soft);color:#8a6400;}
+  .tag.g{background:#e7f6ec;color:var(--ok);}
+  .empty{color:var(--muted);font-size:13px;padding:22px;text-align:center;border:1px dashed var(--line);border-radius:10px;}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .field label{font-size:12px;color:var(--muted);}
+  .field input,.field select,.field textarea{
+    font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);
+  }
+  .field input:focus,.field select:focus{outline:2px solid var(--blue-soft);border-color:var(--blue);}
+
+  .modal-mask{position:fixed;inset:0;background:rgba(20,35,55,.45);display:none;align-items:center;justify-content:center;z-index:50;}
+  .modal-mask.show{display:flex;}
+  .modal{background:#fff;border-radius:14px;padding:22px 24px;width:400px;max-width:92vw;box-shadow:0 12px 40px rgba(10,30,60,.28);}
+  .modal h3{margin:0 0 6px;font-size:16px;color:var(--blue-dark);}
+  .modal p{margin:0 0 14px;font-size:13px;color:var(--muted);}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+  .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:var(--blue-dark);color:#fff;padding:11px 20px;border-radius:9px;font-size:13px;opacity:0;transition:.25s;z-index:60;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .kv{font-size:13px;line-height:1.9;}
+  .kv b{color:var(--blue-dark);}
+  code.inline{background:var(--bg-soft);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo">盾</div>
+  <div class="brand">
+    <h1>安全校园巡逻系统</h1>
+    <p>夜间 · 清晨 校园巡逻 · 人机协同</p>
+  </div>
+  <div class="spacer"></div>
+  <span class="badge">概念验证版</span>
+  <span class="clock" id="clock">--:--:--</span>
+</header>
+
+<nav class="tabs">
+  <button data-tab="create" class="active">创建巡逻路径</button>
+  <button data-tab="archive">巡逻路径存档</button>
+  <button data-tab="run">选择路径巡逻</button>
+  <button data-tab="schedule">定时巡逻</button>
+  <button data-tab="log">巡逻日志</button>
+</nav>
+
+<main>
+  <!-- ============ 创建巡逻路径 ============ -->
+  <section class="page active" id="page-create">
+    <div class="card">
+      <h2>创建新巡逻路径</h2>
+      <p class="hint">在地图上点选需要巡逻的位置（黄色圆点），并设定起点（蓝色方块，默认门卫室）。点击「开始规划」，系统将调用巡逻路径规划算法，输出最短的巡逻顺序。</p>
+      <div class="toolbar">
+        <span class="label">操作模式：</span>
+        <button class="btn primary mini" id="mode-add">添加巡逻点</button>
+        <button class="btn mini" id="mode-start">设置起点</button>
+        <button class="btn mini" id="mode-del">删除巡逻点</button>
+        <button class="btn mini" id="btn-clear">清空全部</button>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn warn" id="btn-plan">开始规划</button>
+      </div>
+      <div class="row">
+        <div style="flex:0 0 auto">
+          <canvas class="grid" id="grid" width="470" height="470"></canvas>
+          <div class="legend">
+            <span><i style="background:#1a5fb4"></i>起点（门卫室）</span>
+            <span><i style="background:#f5b301"></i>巡逻点</span>
+            <span><i style="background:#dbe6f5"></i>已规划路线</span>
+            <span><i style="background:#e05252"></i>机器人当前位置</span>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card" style="margin:0">
+            <h2 style="font-size:13px">规划结果</h2>
+            <div id="planSummary" class="kv" style="color:var(--muted)">尚未规划。请先在地图上点选巡逻点。</div>
+            <div class="stat" id="planStats" style="display:none">
+              <div><span>巡逻点数</span><b id="st-points">0</b></div>
+              <div><span>路线总长</span><b class="y" id="st-dist">0</b></div>
+              <div><span>求解耗时</span><b id="st-time">0</b></div>
+            </div>
+            <div id="orderBox" style="display:none;margin-top:12px">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px">巡逻顺序</div>
+              <div id="orderText" style="font-size:13px;line-height:1.9"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="convCard" style="display:none">
+      <h2>算法收敛曲线</h2>
+      <p class="hint">横轴为进化代数，纵轴为当前最优路线长度。曲线快速下降并趋于平稳，说明算法在稳定地逼近更优路线。</p>
+      <canvas id="chart" width="900" height="240" style="width:100%;max-width:900px"></canvas>
+    </div>
+  </section>
+
+  <!-- ============ 巡逻路径存档 ============ -->
+  <section class="page" id="page-archive">
+    <div class="card">
+      <h2>巡逻路径存档</h2>
+      <p class="hint">已存档的巡逻路径。可随时调取用于临时巡逻或定时巡逻。保安可对路径自定义命名。</p>
+      <div id="archiveList"></div>
+    </div>
+  </section>
+
+  <!-- ============ 选择路径巡逻 ============ -->
+  <section class="page" id="page-run">
+    <div class="card">
+      <h2>选择路径巡逻（临时单次）</h2>
+      <p class="hint">选择一条已存档的巡逻路径，下发一次临时巡逻任务，用于应对不常规情况。</p>
+      <div class="row">
+        <div class="col" style="max-width:420px">
+          <div id="runList"></div>
+        </div>
+        <div class="col">
+          <canvas class="grid" id="runGrid" width="470" height="470"></canvas>
+          <div id="runStatus" class="kv" style="margin-top:10px;color:var(--muted)">请选择左侧的一条巡逻路径开始巡逻。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 定时巡逻 ============ -->
+  <section class="page" id="page-schedule">
+    <div class="card">
+      <h2>长期定时定路径巡逻</h2>
+      <p class="hint">为机器人设置每天固定时间、固定路径的巡逻任务（机器人每天的主要任务）。时间与路径均可随时修改，没有限制。</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 150px">
+          <label>巡逻时间</label>
+          <input type="time" id="sch-time" value="22:30">
+        </div>
+        <div class="field" style="flex:1;min-width:220px">
+          <label>巡逻路径</label>
+          <select id="sch-path"></select>
+        </div>
+        <div class="field" style="flex:1;min-width:200px">
+          <label>备注（可选）</label>
+          <input type="text" id="sch-note" placeholder="如：夜间重点区域巡视">
+        </div>
+      </div>
+      <button class="btn primary" id="btn-add-sch">保存定时任务</button>
+      <span id="schEffective" style="margin-left:12px;font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div class="card">
+      <h2>定时任务列表</h2>
+      <div id="schList"></div>
+    </div>
+  </section>
+
+  <!-- ============ 巡逻日志 ============ -->
+  <section class="page" id="page-log">
+    <div class="card">
+      <h2>巡逻日志</h2>
+      <p class="hint">机器人每次巡逻自动记录，包含时间、事件与保安处理情况，可追溯。</p>
+      <table>
+        <thead><tr><th style="width:170px">时间</th><th>事件</th><th style="width:220px">保安处理情况</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- 存档询问弹窗 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h3 id="modalTitle">是否保存本次巡逻路径？</h3>
+    <p id="modalDesc">保存后可在"巡逻路径存档"中随时调取。</p>
+    <div class="field" id="modalField">
+      <label>为路径命名</label>
+      <input type="text" id="modalInput" placeholder="如：夜间东区常规路线">
+    </div>
+    <div class="actions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   一、巡逻路径规划算法（"行为基因"双种群协同进化 CSGA）
+   移植自 pmx+reverse+csga.py
+   - 交叉算子：PMX（部分匹配交叉）
+   - 变异算子：逆转变异
+   - 双种群：上种群=探索（无精英保留），下种群=开发（精英保留+2-opt局部精修）
+   - 每 10 代将下种群精英注入上种群
+   - 适应度 = 1 / 路线总长度；距离取曼哈顿距离
+   ========================================================= */
+const ALGO = { popSize:60, gens:120, eliteRatio:0.1, crossRate:0.9, mutRate:0.8, tournament:3 };
+
+function rndInt(n){ return Math.floor(Math.random()*n); }
+function manhattan(a,b){ return Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]); }
+
+function totalDistance(order, targets, start){
+  if(order.length===0) return 0;
+  let t = manhattan(start, targets[order[0]]);
+  for(let i=0;i<order.length-1;i++) t += manhattan(targets[order[i]], targets[order[i+1]]);
+  t += manhattan(targets[order[order.length-1]], start);
+  return t;
+}
+function randomOrder(n){
+  const a=[...Array(n).keys()];
+  for(let i=n-1;i>0;i--){ const j=rndInt(i+1); const tmp=a[i]; a[i]=a[j]; a[j]=tmp; }
+  return a;
+}
+/* 逆转变异：随机选取一段基因倒序 */
+function invertMutate(seq){
+  const a=seq.slice(); const n=a.length;
+  if(n<2) return a;
+  let i=rndInt(n), j=rndInt(n);
+  while(j===i) j=rndInt(n);
+  if(i>j){ const t=i; i=j; j=t; }
+  const seg=a.slice(i,j).reverse();
+  for(let k=0;k<seg.length;k++) a[i+k]=seg[k];
+  return a;
+}
+/* PMX 部分匹配交叉 */
+function pmxCrossover(ga,gb){
+  const n=ga.length;
+  let l=rndInt(n), r=rndInt(n);
+  if(l>r){ const t=l; l=r; r=t; }
+  if(l===r) return ga.slice();
+  const child=ga.slice();
+  for(let i=l;i<r;i++) child[i]=gb[i];
+  const map={};
+  for(let i=l;i<r;i++) map[gb[i]]=ga[i];
+  for(let i=0;i<n;i++){
+    if(i>=l && i<r) continue;
+    let g=child[i];
+    while(Object.prototype.hasOwnProperty.call(map,g)) g=map[g];
+    child[i]=g;
+  }
+  return child;
+}
+/* 2-opt 局部精修：交换两点位置，路径变短才接受，最多尝试 30 次 */
+function improveElite(seq, targets, start){
+  const s=seq.slice(); const n=s.length;
+  if(n>=4){
+    let cnt=0;
+    while(cnt<30){
+      const i=rndInt(n-3);
+      const j=i+3+rndInt(n-(i+3));
+      const leftI = i===0 ? start : targets[s[i-1]];
+      const rightJ = j===n-1 ? start : targets[s[j+1]];
+      const removed = manhattan(leftI,targets[s[i]]) + manhattan(targets[s[i]],targets[s[i+1]])
+                    + manhattan(targets[s[j-1]],targets[s[j]]) + manhattan(targets[s[j]],rightJ);
+      const added   = manhattan(leftI,targets[s[j]]) + manhattan(targets[s[j]],targets[s[i+1]])
+                    + manhattan(targets[s[j-1]],targets[s[i]]) + manhattan(targets[s[i]],rightJ);
+      if(added < removed){ const t=s[i]; s[i]=s[j]; s[j]=t; break; }
+      cnt++;
+    }
+  }
+  return s;
+}
+
+function runCSGA(targets, start){
+  const n=targets.length;
+  const popSize=ALGO.popSize, gens=ALGO.gens, nElite=Math.max(1,Math.floor(popSize*ALGO.eliteRatio));
+  const evaluate = pop => pop.forEach(c=>{ const d=totalDistance(c.genes,targets,start); c.fit = d>0 ? 1/d : 0; });
+  const bestOf = pop => pop.reduce((a,b)=> b.fit>a.fit ? b : a);
+  const sortedDesc = pop => pop.slice().sort((a,b)=> b.fit-a.fit);
+  const select = pop => {
+    let best=pop[rndInt(pop.length)];
+    for(let k=0;k<ALGO.tournament-1;k++){ const c=pop[rndInt(pop.length)]; if(c.fit>best.fit) best=c; }
+    return best;
+  };
+  const evolve = (pop, isDown) => {
+    evaluate(pop);
+    const next=[];
+    if(isDown){
+      const sorted=sortedDesc(pop);
+      for(let k=0;k<nElite;k++) next.push({ genes: improveElite(sorted[k].genes, targets, start) });
+    }
+    while(next.length<popSize){
+      const a=select(pop), b=select(pop);
+      let child = Math.random()<ALGO.crossRate ? pmxCrossover(a.genes,b.genes) : a.genes.slice();
+      if(Math.random()<ALGO.mutRate) child = invertMutate(child);
+      next.push({ genes: child });
+    }
+    return next.slice(0,popSize);
+  };
+
+  let up=[], down=[];
+  for(let k=0;k<popSize;k++){ up.push({genes:randomOrder(n)}); down.push({genes:randomOrder(n)}); }
+
+  let bestDist=Infinity, bestGenes=null; const history=[];
+  for(let gen=0; gen<gens; gen++){
+    evaluate(up); evaluate(down);
+    const bu=bestOf(up), bd=bestOf(down);
+    const du=totalDistance(bu.genes,targets,start), dd=totalDistance(bd.genes,targets,start);
+    const gBest=Math.min(du,dd);
+    history.push(gBest);
+    if(gBest<bestDist){ bestDist=gBest; bestGenes=(dd<du?bd:bu).genes.slice(); bestGenes.origin = (dd<du?'下种群（开发）':'上种群（探索）'); }
+    if(gen>0 && gen%10===0){
+      const sd=sortedDesc(down);
+      for(let k=0;k<nElite;k++){
+        let worst=0;
+        for(let m=1;m<up.length;m++) if(up[m].fit < up[worst].fit) worst=m;
+        up[worst]={ genes: sd[k].genes.slice() };
+      }
+    }
+    up=evolve(up,false); down=evolve(down,true);
+  }
+  return { genes:bestGenes, distance:bestDist, history };
+}
+
+/* 将访问顺序展开为逐格路径（先横后竖），用于画线与动画 */
+function expandPath(order, targets, start){
+  const pts=[start.slice()];
+  let cur=start.slice();
+  const visit = idx => {
+    const t=targets[idx];
+    while(cur[0]!==t[0]){ cur[0]+= cur[0]<t[0]?1:-1; pts.push(cur.slice()); }
+    while(cur[1]!==t[1]){ cur[1]+= cur[1]<t[1]?1:-1; pts.push(cur.slice()); }
+  };
+  order.forEach(visit);
+  while(cur[0]!==start[0]){ cur[0]+= cur[0]<start[0]?1:-1; pts.push(cur.slice()); }
+  while(cur[1]!==start[1]){ cur[1]+= cur[1]<start[1]?1:-1; pts.push(cur.slice()); }
+  return pts;
+}
+
+/* =========================================================
+   二、应用状态与工具
+   ========================================================= */
+const GRID = 12;
+const KEYS = { paths:'scp_paths', schedules:'scp_schedules', logs:'scp_logs' };
+const store = {
+  get(k, def){ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?def:v; }catch(e){ return def; } },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function nowStr(d){ d=d||new Date(); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1900); }
+
+let PATHS = store.get(KEYS.paths, []);
+let SCHEDULES = store.get(KEYS.schedules, []);
+let LOGS = store.get(KEYS.logs, null);
+if(!LOGS){
+  LOGS = [
+    { time:'2026-10-01 22:31:07', event:'机器人按"夜间东区常规路线"开始巡逻（起点：门卫室）', handling:'正常' },
+    { time:'2026-10-01 22:46:53', event:'教学楼B栋与实验楼之间检测到人员活动，已推送截图与位置至保安室电脑及手机', handling:'保安查看后确认是加班老师，已核实身份，无异常' },
+    { time:'2026-10-01 23:02:11', event:'巡逻完成，共经过 9 个巡逻点，未发现其他异常', handling:'正常' },
+    { time:'2026-10-02 05:58:20', event:'机器人按"清晨西区路线"开始巡逻（清晨任务）', handling:'正常' },
+    { time:'2026-10-02 06:10:44', event:'操场西北角检测到人员活动，已推送截图与位置', handling:'保安到场查看，为早到校学生，已提醒注意安全' },
+    { time:'2026-10-02 06:24:02', event:'电量低于 20%，自主返回充电位充电', handling:'正常' }
+  ];
+  store.set(KEYS.logs, LOGS);
+}
+function addLog(event, handling){
+  LOGS.unshift({ time: nowStr(), event, handling: handling||'待处理' });
+  store.set(KEYS.logs, LOGS);
+  renderLogs();
+}
+
+/* =========================================================
+   三、页签切换
+   ========================================================= */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='archive') renderArchive();
+    if(btn.dataset.tab==='run') renderRunList();
+    if(btn.dataset.tab==='schedule') renderSchedules();
+    if(btn.dataset.tab==='log') renderLogs();
+  });
+});
+
+/* =========================================================
+   四、创建巡逻路径（画布）
+   ========================================================= */
+const cv = document.getElementById('grid');
+const ctx = cv.getContext('2d');
+const CELL = cv.width / GRID;
+
+let ptStart = [0,0];
+let ptTargets = [];
+let ptOrder = null;
+let mode = 'add';
+
+function cellCenter(x,y){ return [x*CELL+CELL/2, y*CELL+CELL/2]; }
+function drawArrowPath(ctx, pts, color, width){
+  ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ const [cx,cy]=cellCenter(p[0],p[1]); i?ctx.lineTo(cx,cy):ctx.moveTo(cx,cy); });
+  ctx.stroke();
+}
+function drawGridBase(c, cell){
+  c.clearRect(0,0,c.canvas.width,c.canvas.height);
+  c.fillStyle='#fff'; c.fillRect(0,0,c.canvas.width,c.canvas.height);
+  c.strokeStyle='#eef2f7'; c.lineWidth=1;
+  for(let i=0;i<=GRID;i++){
+    c.beginPath(); c.moveTo(i*cell,0); c.lineTo(i*cell,c.canvas.height); c.stroke();
+    c.beginPath(); c.moveTo(0,i*cell); c.lineTo(c.canvas.width,i*cell); c.stroke();
+  }
+  c.strokeStyle='#dbe6f5'; c.lineWidth=2; c.strokeRect(1,1,c.canvas.width-2,c.canvas.height-2);
+  c.fillStyle='#c3cedd'; c.font='10px sans-serif';
+  for(let i=0;i<GRID;i++){ c.fillText(i, i*cell+3, 11); c.fillText(i, 3, i*cell+12); }
+}
+function drawCreateScene(){
+  drawGridBase(ctx, CELL);
+  if(ptOrder){
+    const pts = expandPath(ptOrder, ptTargets, ptStart);
+    drawArrowPath(ctx, pts, '#c9d8ee', 5);
+  }
+  // 起点
+  const [sx,sy]=cellCenter(ptStart[0],ptStart[1]);
+  ctx.fillStyle='#1a5fb4'; ctx.fillRect(sx-CELL*0.3, sy-CELL*0.3, CELL*0.6, CELL*0.6);
+  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif'; ctx.fillText('起', sx-6, sy+4);
+  // 巡逻点
+  const startIdx = ptOrder ? ptOrder.map(i=>i) : null;
+  ptTargets.forEach((p,i)=>{
+    const [cx,cy]=cellCenter(p[0],p[1]);
+    ctx.beginPath(); ctx.arc(cx,cy,CELL*0.26,0,Math.PI*2);
+    ctx.fillStyle='#f5b301'; ctx.fill();
+    ctx.strokeStyle='#d99b00'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#5b4300'; ctx.font='bold 11px sans-serif';
+    const label = ptOrder ? (ptOrder.indexOf(i)+1) : (i+1);
+    ctx.fillText(label, cx-4, cy+4);
+  });
+}
+cv.addEventListener('click', e=>{
+  const rect=cv.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/CELL), y=Math.floor((e.clientY-rect.top)/CELL);
+  if(x<0||y<0||x>=GRID||y>=GRID) return;
+  const coord=[x,y];
+  if(mode==='start'){ ptStart=coord; ptOrder=null; }
+  else if(mode==='del'){
+    const idx=ptTargets.findIndex(p=>p[0]===x&&p[1]===y);
+    if(idx>=0) ptTargets.splice(idx,1);
+    ptOrder=null;
+  } else {
+    if(!(x===ptStart[0]&&y===ptStart[1]) && !ptTargets.some(p=>p[0]===x&&p[1]===y)){
+      ptTargets.push(coord); ptOrder=null;
+    }
+  }
+  drawCreateScene();
+});
+function setMode(m){
+  mode=m;
+  ['add','start','del'].forEach(k=>{
+    const b=document.getElementById('mode-'+k);
+    b.className = 'btn mini' + (k===m?' primary':'');
+  });
+}
+document.getElementById('mode-add').onclick=()=>setMode('add');
+document.getElementById('mode-start').onclick=()=>setMode('start');
+document.getElementById('mode-del').onclick=()=>setMode('del');
+document.getElementById('btn-clear').onclick=()=>{ ptTargets=[]; ptStart=[0,0]; ptOrder=null; drawCreateScene(); resetPlanPanel(); };
+function resetPlanPanel(){
+  document.getElementById('planSummary').style.display='block';
+  document.getElementById('planSummary').textContent='尚未规划。请先在地图上点选巡逻点。';
+  document.getElementById('planStats').style.display='none';
+  document.getElementById('orderBox').style.display='none';
+  document.getElementById('convCard').style.display='none';
+}
+document.getElementById('btn-plan').onclick=()=>{
+  if(ptTargets.length<3){ toast('请至少点选 3 个巡逻点'); return; }
+  const t0=performance.now();
+  const res=runCSGA(ptTargets, ptStart);
+  const dt=((performance.now()-t0)/1000).toFixed(2);
+  ptOrder=res.genes;
+  drawCreateScene();
+  // 结果面板
+  document.getElementById('planSummary').style.display='none';
+  document.getElementById('planStats').style.display='flex';
+  document.getElementById('st-points').textContent=ptTargets.length;
+  document.getElementById('st-dist').textContent=res.distance;
+  document.getElementById('st-time').textContent=dt+' s';
+  document.getElementById('orderBox').style.display='block';
+  const seq = res.genes.map((idx,i)=>`${i+1}. 巡逻点${idx+1}（${ptTargets[idx][0]},${ptTargets[idx][1]}）`).join('　');
+  document.getElementById('orderText').innerHTML = `<code class="inline">起点(${ptStart[0]},${ptStart[1]})</code> → ` + seq + ' → <code class="inline">返回起点</code>';
+  // 收敛曲线
+  document.getElementById('convCard').style.display='block';
+  drawChart(res.history);
+  // 询问是否存档
+  openSaveModal(res);
+};
+
+/* 收敛曲线 */
+function drawChart(history){
+  const c=document.getElementById('chart'); const x=c.getContext('2d');
+  const W=c.width,H=c.height,pad=38;
+  x.clearRect(0,0,W,H); x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  const max=Math.max(...history), min=Math.min(...history);
+  x.strokeStyle='#eef2f7';
+  for(let i=0;i<=4;i++){ const y=pad+(H-2*pad)*i/4; x.beginPath(); x.moveTo(pad,y); x.lineTo(W-pad,y); x.stroke(); }
+  x.strokeStyle='#c3cedd'; x.beginPath(); x.moveTo(pad,pad); x.lineTo(pad,H-pad); x.lineTo(W-pad,H-pad); x.stroke();
+  x.fillStyle='#6b7a8d'; x.font='11px sans-serif';
+  x.fillText('路线长度', 4, 14);
+  x.fillText('进化代数 →', W-90, H-8);
+  x.fillText(String(max), 6, pad+4);
+  x.fillText(String(min), 6, H-pad+4);
+  x.beginPath();
+  history.forEach((v,i)=>{
+    const px=pad+(W-2*pad)*i/(history.length-1);
+    const py=pad+(H-2*pad)*( (v-min)/(max-min||1) );
+    i?x.lineTo(px,py):x.moveTo(px,py);
+  });
+  x.strokeStyle='#1a5fb4'; x.lineWidth=2.2; x.stroke();
+  // 高亮终点
+  const px=W-pad, py=pad+(H-2*pad)*((history[history.length-1]-min)/(max-min||1));
+  x.beginPath(); x.arc(px,py,4,0,Math.PI*2); x.fillStyle='#f5b301'; x.fill();
+}
+
+/* =========================================================
+   五、存档询问弹窗
+   ========================================================= */
+const mask=document.getElementById('modalMask');
+function openSaveModal(res){
+  document.getElementById('modalTitle').textContent='是否保存本次巡逻路径？';
+  document.getElementById('modalDesc').textContent='保存后可在"巡逻路径存档"中随时调取，用于临时或定时巡逻。';
+  document.getElementById('modalField').style.display='flex';
+  const input=document.getElementById('modalInput');
+  input.value='巡逻路线 '+(PATHS.length+1);
+  document.getElementById('modalActions').innerHTML='';
+  const save=document.createElement('button'); save.className='btn primary'; save.textContent='保存并命名';
+  const skip=document.createElement('button'); skip.className='btn'; skip.textContent='暂不保存';
+  save.onclick=()=>{
+    const name=input.value.trim()||('巡逻路线 '+(PATHS.length+1));
+    const p={ id:uid(), name, start:ptStart.slice(), targets:ptTargets.map(a=>a.slice()),
+              order:res.genes.slice(), distance:res.distance, createdAt:nowStr() };
+    PATHS.push(p); store.set(KEYS.paths, PATHS); renderArchive(); renderRunList(); renderPathSelect();
+    closeModal(); toast('已存档：'+name);
+  };
+  skip.onclick=()=>{ closeModal(); toast('本次路径未存档'); };
+  document.getElementById('modalActions').appendChild(skip); document.getElementById('modalActions').appendChild(save);
+  mask.classList.add('show'); setTimeout(()=>input.focus(),50);
+}
+function closeModal(){ mask.classList.remove('show'); }
+mask.addEventListener('click', e=>{ if(e.target===mask) closeModal(); });
+
+/* =========================================================
+   六、存档列表
+   ========================================================= */
+function renderArchive(){
+  const box=document.getElementById('archiveList');
+  if(PATHS.length===0){ box.innerHTML='<div class="empty">暂无存档路径。请先在"创建巡逻路径"中规划并保存。</div>'; return; }
+  box.innerHTML='';
+  PATHS.forEach(p=>{
+    const el=document.createElement('div'); el.className='list-item';
+    el.innerHTML=`<div class="grow">
+        <div class="name">${p.name}</div>
+        <div class="meta"><span class="tag">${p.targets.length} 个巡逻点</span><span class="tag y">总长 ${p.distance}</span>存档于 ${p.createdAt}</div>
+      </div>`;
+    const del=document.createElement('button'); del.className='btn mini'; del.textContent='删除';
+    del.onclick=()=>{ if(confirm('确认删除路径"'+p.name+'"？')){
+      PATHS=PATHS.filter(x=>x.id!==p.id); store.set(KEYS.paths,PATHS);
+      SCHEDULES=SCHEDULES.filter(s=>s.pathId!==p.id); store.set(KEYS.schedules,SCHEDULES);
+      renderArchive(); renderRunList(); renderPathSelect(); renderSchedules(); toast('已删除');
+    }};
+    el.appendChild(del); box.appendChild(el);
+  });
+}
+
+/* =========================================================
+   七、选择路径巡逻（临时单次 + 动画）
+   ========================================================= */
+const cvRun=document.getElementById('runGrid'); const ctxRun=cvRun.getContext('2d');
+const RUN_CELL=cvRun.width/GRID;
+let animTimer=null;
+function renderRunList(){
+  const box=document.getElementById('runList');
+  if(PATHS.length===0){ box.innerHTML='<div class="empty">暂无存档路径，请先创建并保存路径。</div>'; return; }
+  box.innerHTML='';
+  PATHS.forEach(p=>{
+    const el=document.createElement('div'); el.className='list-item';
+    el.innerHTML=`<div class="grow"><div class="name">${p.name}</div>
+      <div class="meta">${p.targets.length} 个巡逻点 · 总长 ${p.distance}</div></div>`;
+    const go=document.createElement('button'); go.className='btn primary mini'; go.textContent='开始巡逻';
+    go.onclick=()=>startRun(p);
+    el.appendChild(go); box.appendChild(el);
+  });
+}
+function drawRunScene(path, robotPos){
+  drawGridBase(ctxRun, RUN_CELL);
+  if(!path){ return; }
+  const pts=expandPath(path.order, path.targets, path.start);
+  // 已走路段
+  drawArrowPath(ctxRun, pts, '#dbe6f5', 5);
+  // 起点与巡逻点
+  const [sx,sy]=cellCenter(path.start[0],path.start[1]);
+  ctxRun.fillStyle='#1a5fb4'; ctxRun.fillRect(sx-RUN_CELL*0.3, sy-RUN_CELL*0.3, RUN_CELL*0.6, RUN_CELL*0.6);
+  path.targets.forEach((p,i)=>{
+    const [cx,cy]=cellCenter(p[0],p[1]);
+    ctxRun.beginPath(); ctxRun.arc(cx,cy,RUN_CELL*0.24,0,Math.PI*2);
+    ctxRun.fillStyle='#f5b301'; ctxRun.fill();
+  });
+  if(robotPos){
+    const [cx,cy]=cellCenter(robotPos[0],robotPos[1]);
+    ctxRun.beginPath(); ctxRun.arc(cx,cy,RUN_CELL*0.3,0,Math.PI*2);
+    ctxRun.fillStyle='#e05252'; ctxRun.fill();
+    ctxRun.strokeStyle='#fff'; ctxRun.lineWidth=3; ctxRun.stroke();
+  }
+}
+function startRun(path){
+  if(animTimer) clearInterval(animTimer);
+  const pts=expandPath(path.order, path.targets, path.start);
+  let i=0;
+  const status=document.getElementById('runStatus');
+  status.innerHTML='机器人正在执行临时巡逻：<b>'+path.name+'</b> …';
+  addLog('执行临时巡逻："'+path.name+'"，共 '+path.targets.length+' 个巡逻点', '巡逻中');
+  drawRunScene(path, pts[0]);
+  animTimer=setInterval(()=>{
+    i++;
+    if(i>=pts.length){
+      clearInterval(animTimer); animTimer=null;
+      drawRunScene(path, pts[pts.length-1]);
+      status.innerHTML='临时巡逻完成：<b>'+path.name+'</b>，已返回起点，未发现异常。';
+      addLog('临时巡逻完成："'+path.name+'"，已返回起点，未发现异常', '正常');
+      return;
+    }
+    drawRunScene(path, pts[i]);
+  }, 130);
+}
+
+/* =========================================================
+   八、定时巡逻
+   ========================================================= */
+function renderPathSelect(){
+  const sel=document.getElementById('sch-path'); sel.innerHTML='';
+  if(PATHS.length===0){ sel.innerHTML='<option value="">（暂无存档路径）</option>'; return; }
+  PATHS.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+}
+function effectiveText(){
+  const now=new Date(); const h=now.getHours();
+  if(h<20) return '保存后将于 当天夜间 / 次日清晨 生效';
+  return '保存后将于 次日 生效';
+}
+document.getElementById('sch-time').addEventListener('input', ()=>{
+  document.getElementById('schEffective').textContent=effectiveText();
+});
+document.getElementById('btn-add-sch').onclick=()=>{
+  const time=document.getElementById('sch-time').value;
+  const pathId=document.getElementById('sch-path').value;
+  const note=document.getElementById('sch-note').value.trim();
+  if(!time){ toast('请设置巡逻时间'); return; }
+  if(!pathId){ toast('请先创建并保存一条巡逻路径'); return; }
+  const p=PATHS.find(x=>x.id===pathId);
+  SCHEDULES.push({ id:uid(), time, pathId, pathName:p.name, note, enabled:true, updatedAt:nowStr(), effective:effectiveText() });
+  store.set(KEYS.schedules, SCHEDULES);
+  document.getElementById('sch-note').value='';
+  renderSchedules(); toast('定时任务已保存');
+};
+function renderSchedules(){
+  renderPathSelect();
+  document.getElementById('schEffective').textContent=effectiveText();
+  const box=document.getElementById('schList');
+  if(SCHEDULES.length===0){ box.innerHTML='<div class="empty">暂无定时任务。</div>'; return; }
+  box.innerHTML='';
+  SCHEDULES.forEach(s=>{
+    const el=document.createElement('div'); el.className='list-item';
+    el.innerHTML=`<div class="grow">
+      <div class="name">每天 ${s.time} · ${s.pathName} ${s.note?'（'+s.note+'）':''}</div>
+      <div class="meta"><span class="tag ${s.enabled?'g':''}">${s.enabled?'已启用':'已停用'}</span>
+        <span class="tag y">${s.effective}</span>更新于 ${s.updatedAt}</div>
+    </div>`;
+    // 修改
+    const edit=document.createElement('button'); edit.className='btn mini'; edit.textContent='修改';
+    edit.onclick=()=>{
+      const nt=prompt('修改巡逻时间（HH:MM）', s.time); if(nt===null) return;
+      if(!/^\d{1,2}:\d{2}$/.test(nt.trim())){ toast('时间格式应为 HH:MM'); return; }
+      s.time=nt.trim(); s.updatedAt=nowStr(); s.effective=effectiveText();
+      store.set(KEYS.schedules, SCHEDULES); renderSchedules(); toast('已修改，'+effectiveText());
+    };
+    // 启停
+    const tog=document.createElement('button'); tog.className='btn mini'; tog.textContent=s.enabled?'停用':'启用';
+    tog.onclick=()=>{ s.enabled=!s.enabled; store.set(KEYS.schedules,SCHEDULES); renderSchedules(); };
+    // 删除
+    const del=document.createElement('button'); del.className='btn mini'; del.textContent='删除';
+    del.onclick=()=>{ SCHEDULES=SCHEDULES.filter(x=>x.id!==s.id); store.set(KEYS.schedules,SCHEDULES); renderSchedules(); toast('已删除定时任务'); };
+    el.appendChild(edit); el.appendChild(tog); el.appendChild(del); box.appendChild(el);
+  });
+}
+
+/* =========================================================
+   九、巡逻日志
+   ========================================================= */
+function renderLogs(){
+  const body=document.getElementById('logBody'); body.innerHTML='';
+  LOGS.forEach(l=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${l.time}</td><td>${l.event}</td><td>${l.handling}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+/* =========================================================
+   十、初始化
+   ========================================================= */
+function tick(){ document.getElementById('clock').textContent=nowStr(); }
+setInterval(tick,1000); tick();
+setMode('add');
+drawCreateScene();
+renderArchive(); renderRunList(); renderPathSelect(); renderSchedules(); renderLogs();
+drawRunScene(null,null);
+</script>
+</body>
+</html>
